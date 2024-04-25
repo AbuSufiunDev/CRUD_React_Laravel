@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosClient from '../axios-clint';
+import { useStateContext } from '../context/ContextProvider';
 
 function StudentForm() {
-    //const [csrfToken, setCsrfToken] = useState('');
+
+    const {setUser, setToken} = useStateContext()
+    const [errors, setErrors] = useState(null)
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        phone: '',
-        course: ''
+        password: '',
+        password_confirmation: ''
     });
 
 
@@ -19,26 +23,38 @@ function StudentForm() {
         }));
     };
 
-    const handleSubmit = async e => {
+    const handleSubmit =  (e) => {
         e.preventDefault();
-        try {
-            const response = await axios.post('http://127.0.0.1:8000/students', formData);
-            console.log(response.data); // Log the response from the server
-            // Optionally, you can reset the form after successful submission
-            setFormData({
-                name: '',
-                email: '',
-                phone: '',
-                course: ''
-            });
-        } catch (error) {
-            console.log(error);
+        console.log(formData)
+        //consol.log axiosClient url
+        console.log(axiosClient.BaseURL)
+
+        axiosClient.post('http://127.0.0.1:8000/api/signup', formData)
+      .then(({data}) => {
+        setUser(data.user)
+        setToken(data.token);
+      })
+      .catch(err => {
+        const response = err.response;
+        if (response && response.status === 422) {
+          setErrors(response.data.errors)
         }
+      })
+    
     };
 
     return (
         <div>
-            <h2>Add a Student</h2>
+            <h2>Add a Student </h2>
+            <div>
+            {errors &&
+            <div className="alert">
+              {Object.keys(errors).map(key => (
+                <p key={key}>{errors[key][0]}</p>
+              ))}
+            </div>
+          }
+            </div>
             <form onSubmit={handleSubmit}>
                 <div>
                     <label>Name:</label>
@@ -61,21 +77,21 @@ function StudentForm() {
                     />
                 </div>
                 <div>
-                    <label>Phone:</label>
+                    <label>Password:</label>
                     <input
                         type="text"
-                        name="phone"
-                        value={formData.phone}
+                        name="password"
+                        value={formData.password}
                         onChange={handleChange}
                         required
                     />
                 </div>
                 <div>
-                    <label>Course:</label>
+                    <label>Password Confirmation:</label>
                     <input
                         type="text"
-                        name="course"
-                        value={formData.course}
+                        name="password_confirmation"
+                        value={formData.password_confirmation}
                         onChange={handleChange}
                         required
                     />
